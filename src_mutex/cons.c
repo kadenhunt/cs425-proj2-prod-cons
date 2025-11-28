@@ -13,24 +13,24 @@ void *consumer(void *param) {
 
     while (1) {
         // Lock to check the consumed count
-        pthread_spin_lock(&lock);
+        sem_wait(&mutex);
         if (consumed_count >= params->upper_limit) {
-            pthread_spin_unlock(&lock);
+            sem_post(&mutex);
             break; // All numbers consumed
         }
-        pthread_spin_unlock(&lock);
+        sem_post(&mutex);
 
         sem_wait(&full);
 
-        // This small critical section for buffer removal can also be protected by the same spinlock
-        pthread_spin_lock(&lock);
+        // This small critical section for buffer removal can also be protected by the same mutex
+        sem_wait(&mutex);
         item = remove_item();
         consumed_count++;
         
         // Critical section work (for experiments)
         for (long j = 0; j < critical_section_work; j++);
         
-        pthread_spin_unlock(&lock);
+        sem_post(&mutex);
 
         sem_post(&empty);
 

@@ -7,8 +7,8 @@
 // Semaphores
 extern sem_t empty;
 extern sem_t full;
-// extern sem_t mutex; // Using binary semaphore for mutex
-extern pthread_spinlock_t lock; // Using spinlock for mutex
+extern sem_t mutex; // Using binary semaphore for mutex
+// extern pthread_spinlock_t lock; // Commented out for mutex version
 
 // Struct to pass parameters to threads
 typedef struct {
