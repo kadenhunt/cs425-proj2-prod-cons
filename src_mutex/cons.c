@@ -12,23 +12,36 @@ void *consumer(void *param) {
     int item;
 
     while (1) {
-        // Lock to check the consumed count
+        // Quick check before waiting (to avoid unnecessary waits)
         sem_wait(&mutex);
-        if (consumed_count >= params->upper_limit) {
-            sem_post(&mutex);
+        int should_exit = (consumed_count >= params->upper_limit);
+        sem_post(&mutex);
+        
+        if (should_exit) {
             break; // All numbers consumed
         }
-        sem_post(&mutex);
 
         sem_wait(&full);
 
-        // This small critical section for buffer removal can also be protected by the same mutex
+        // Re-check after acquiring semaphore (in case we waited and condition changed)
         sem_wait(&mutex);
+        if (consumed_count >= params->upper_limit) {
+            // Still need to remove the item and post empty to maintain buffer consistency
+            item = remove_item();
+            sem_post(&mutex);
+            sem_post(&empty);  // Post empty since we removed an item
+            break; // All numbers consumed
+        }
+
+        // This small critical section for buffer removal can also be protected by the same mutex
         item = remove_item();
         consumed_count++;
         
         // Critical section work (for experiments)
-        for (long j = 0; j < critical_section_work; j++);
+        volatile long dummy = 0;
+        for (long j = 0; j < critical_section_work; j++) {
+            dummy += j;
+        }
         
         sem_post(&mutex);
 

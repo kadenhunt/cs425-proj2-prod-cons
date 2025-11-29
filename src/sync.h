@@ -9,10 +9,12 @@ extern sem_t empty;
 extern sem_t full;
 // extern sem_t mutex; // Using binary semaphore for mutex
 extern pthread_spinlock_t lock; // Using spinlock for mutex
+extern int production_done; // Flag to signal that all production is complete
 
 // Struct to pass parameters to threads
 typedef struct {
     int upper_limit;
+    int num_consumers;
 } thread_params_t;
 
 // Initializes synchronization primitives

@@ -42,6 +42,7 @@ int main(int argc, char *argv[]) {
     
     thread_params_t thread_params;
     thread_params.upper_limit = upper_limit;
+    thread_params.num_consumers = num_consumers;
 
     // Start timing
     struct timeval start_time, end_time;

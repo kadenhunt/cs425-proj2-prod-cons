@@ -12,23 +12,36 @@ void *consumer(void *param) {
     int item;
 
     while (1) {
-        // Lock to check the consumed count
+        // Quick check before waiting (to avoid unnecessary waits)
         pthread_spin_lock(&lock);
-        if (consumed_count >= params->upper_limit) {
-            pthread_spin_unlock(&lock);
+        int should_exit = (consumed_count >= params->upper_limit);
+        pthread_spin_unlock(&lock);
+        
+        if (should_exit) {
             break; // All numbers consumed
         }
-        pthread_spin_unlock(&lock);
 
         sem_wait(&full);
 
-        // This small critical section for buffer removal can also be protected by the same spinlock
+        // Re-check after acquiring semaphore (in case we waited and condition changed)
         pthread_spin_lock(&lock);
+        if (consumed_count >= params->upper_limit) {
+            // Still need to remove the item and post empty to maintain buffer consistency
+            item = remove_item();
+            pthread_spin_unlock(&lock);
+            sem_post(&empty);  // Post empty since we removed an item
+            break; // All numbers consumed
+        }
+
+        // This small critical section for buffer removal can also be protected by the same spinlock
         item = remove_item();
         consumed_count++;
         
         // Critical section work (for experiments)
-        for (long j = 0; j < critical_section_work; j++);
+        volatile long dummy = 0;
+        for (long j = 0; j < critical_section_work; j++) {
+            dummy += j;
+        }
         
         pthread_spin_unlock(&lock);
 
