@@ -48,7 +48,7 @@ void *consumer(void *param) {
         sem_post(&empty);
 
         if (!disable_output) {
-            printf("%d ", item);
+            printf("%d, %d\n", item, params->consumer_id);
             fflush(stdout);
         }
     }

@@ -1,0 +1,9 @@
+Synchronization,Buffer_Size,Num_Producers,Num_Consumers,Upper_Limit,Critical_Work,Elapsed_Time
+mutex,10,1,1,10000,0,.020458
+mutex,10,1,1,10000,100000,2.436167
+mutex,10,1,1,10000,1000000,22.083407
+mutex,10,1,5,10000,0,.073667
+mutex,10,1,5,10000,100000,2.474610
+mutex,10,1,5,10000,1000000,22.882232
+mutex,10,5,1,10000,0,.072887
+mutex,10,5,1,10000,100000,1.659708

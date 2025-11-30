@@ -1,79 +1,50 @@
-# Producer-Consumer Problem Implementation
+# CS425 Project 2: Producer-Consumer Problem with Pthreads
 
-A C implementation of the classic producer-consumer synchronization problem using pthreads. This project explores different synchronization methods and measures their performance under various conditions.
+**Team Members:** Kaden Hunt, Nate Barner  
+**Due:** November 29, 2025
 
-## What This Project Does
+## Project Overview
+Implementation of the multi-producer, multi-consumer problem using pthreads with both spinlock and mutex synchronization approaches.
 
-This program simulates multiple producer and consumer threads working with a shared buffer. Producers generate numbers in sequence (0, 1, 2, ...) and place them in the buffer, while consumers take numbers from the buffer and print them. The challenge is keeping everything synchronized so no data gets corrupted or lost.
-
-## Project Structure
-
+## Files Structure
 ```
-src/
-├── main.c          # Main program entry point
-├── buffer.c/.h     # Shared buffer implementation  
-├── prod.c          # Producer thread logic
-├── cons.c          # Consumer thread logic
-└── sync.c/.h       # Synchronization primitives
-
-src_mutex/          # Backup of mutex version
-experiments/        # Testing scripts and results
-main.tex           # Project report in LaTeX
+├── main.tex                                    # Complete project report (LaTeX)
+├── performance_comparison_updated.pdf          # Experimental results figure  
+├── Makefile                                    # Build configuration
+├── src/                                        # Current source code (mutex version)
+│   ├── main.c                                  # Main program with timing
+│   ├── buffer.c/.h                             # Shared circular buffer
+│   ├── prod.c                                  # Producer thread logic
+│   ├── cons.c                                  # Consumer thread logic  
+│   └── sync.c/.h                               # Synchronization primitives
+├── src_mutex/                                  # Backup of mutex implementation
+└── prodcons                                    # Compiled executable
 ```
 
-## How to Build and Run
-
-Since this uses pthreads, you need a Unix-like environment. On Windows, use WSL:
-
+## Compilation and Usage
 ```bash
-# Compile the program
-make
-
-# Run with basic parameters
-./prodcons <buffer_size> <num_producers> <num_consumers> <upper_limit>
-
-# Example: 10-slot buffer, 2 producers, 3 consumers, count to 100
-./prodcons 10 2 3 100
-
-# For experiments (disable output, add critical section work)
-./prodcons 10 2 3 1000 1 100000
+make clean && make                              # Compile the project
+./prodcons <buffer_size> <num_producers> <num_consumers> <upper_limit> [disable_output] [critical_work]
 ```
 
-## What We're Testing
+**Example:**
+```bash
+./prodcons 20 2 3 100                          # Buffer=20, 2 producers, 3 consumers, count to 100
+```
 
-The project compares two synchronization approaches:
+## Output Format
+The program outputs consumed values with consumer IDs:
+```
+0, 1
+1, 2  
+2, 1
+3, 3
+...
+```
 
-**Spinlock Version**: Uses pthread_spinlock_t for mutual exclusion. Threads "spin" in a loop waiting for the lock.
+## Synchronization Versions
+- **Current (src/):** Uses `sem_t` binary semaphores for mutual exclusion
+- **Spinlock version:** Switch by copying appropriate source files and rebuilding
 
-**Mutex Version**: Uses binary semaphores (sem_t) for mutual exclusion. Threads block and get woken up by the OS.
-
-We measure performance under different conditions:
-- Various buffer sizes
-- Different numbers of producer/consumer threads  
-- Different amounts of work in critical sections
-
-## Implementation Details
-
-Both versions ensure:
-- No race conditions when accessing shared data
-- Producers don't overflow the buffer
-- Consumers don't try to read from empty buffer
-- Numbers are produced in perfect sequence (0, 1, 2, ...)
-
-The synchronization uses:
-- `empty` semaphore: Counts available buffer slots
-- `full` semaphore: Counts occupied buffer slots  
-- `mutex`/`lock`: Protects critical sections
-
-## Current Status
-
-- ✅ Both spinlock and mutex versions implemented
-- ✅ Timing measurements integrated
-- ✅ Experiment infrastructure ready
-- 🔄 Data collection and analysis in progress
-- 📊 Report completion underway
-
-## Contributors
-
-- Nate Barner: Problem analysis and design documentation
-- Kaden Hunt: Implementation and experimental setup
+## Experimental Results
+Performance comparison data and analysis available in `main.tex` and `performance_comparison_updated.pdf`.

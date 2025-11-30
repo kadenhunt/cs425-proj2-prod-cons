@@ -13,9 +13,9 @@ void *consumer(void *param) {
 
     while (1) {
         // Quick check before waiting (to avoid unnecessary waits)
-        pthread_spin_lock(&lock);
+        sem_wait(&mutex);
         int should_exit = (consumed_count >= params->upper_limit);
-        pthread_spin_unlock(&lock);
+        sem_post(&mutex);
         
         if (should_exit) {
             break; // All numbers consumed
@@ -24,16 +24,16 @@ void *consumer(void *param) {
         sem_wait(&full);
 
         // Re-check after acquiring semaphore (in case we waited and condition changed)
-        pthread_spin_lock(&lock);
+        sem_wait(&mutex);
         if (consumed_count >= params->upper_limit) {
             // Still need to remove the item and post empty to maintain buffer consistency
             item = remove_item();
-            pthread_spin_unlock(&lock);
+            sem_post(&mutex);
             sem_post(&empty);  // Post empty since we removed an item
             break; // All numbers consumed
         }
 
-        // This small critical section for buffer removal can also be protected by the same spinlock
+        // This small critical section for buffer removal can also be protected by the same mutex
         item = remove_item();
         consumed_count++;
         
@@ -43,12 +43,12 @@ void *consumer(void *param) {
             dummy += j;
         }
         
-        pthread_spin_unlock(&lock);
+        sem_post(&mutex);
 
         sem_post(&empty);
 
         if (!disable_output) {
-            printf("%d ", item);
+            printf("%d, %d\n", item, params->consumer_id);
             fflush(stdout);
         }
     }

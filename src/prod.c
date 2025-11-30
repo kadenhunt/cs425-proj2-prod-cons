@@ -12,7 +12,7 @@ void *producer(void *param) {
 
     while (1) {
         // Lock to get the next value
-        pthread_spin_lock(&lock);
+        sem_wait(&mutex);
         if (next_value >= params->upper_limit) {
             // Check if we're the last producer to finish
             if (!production_done) {
@@ -22,7 +22,7 @@ void *producer(void *param) {
                     sem_post(&full);
                 }
             }
-            pthread_spin_unlock(&lock);
+            sem_post(&mutex);
             break; // All numbers produced
         }
         item = next_value++;
@@ -33,12 +33,12 @@ void *producer(void *param) {
             dummy += j;
         }
         
-        pthread_spin_unlock(&lock);
+        sem_post(&mutex);
 
         sem_wait(&empty);
         
-        // This small critical section for buffer insertion can also be protected by the same spinlock
-        pthread_spin_lock(&lock);
+        // This small critical section for buffer insertion can also be protected by the same mutex
+        sem_wait(&mutex);
         insert_item(item);
         
         // Additional critical section work (for experiments)
@@ -47,7 +47,7 @@ void *producer(void *param) {
             dummy += j;
         }
         
-        pthread_spin_unlock(&lock);
+        sem_post(&mutex);
         
         sem_post(&full);
     }

@@ -40,20 +40,29 @@ int main(int argc, char *argv[]) {
     pthread_t producer_threads[num_producers];
     pthread_t consumer_threads[num_consumers];
     
-    thread_params_t thread_params;
-    thread_params.upper_limit = upper_limit;
-    thread_params.num_consumers = num_consumers;
+    // Create separate thread params for each consumer (for unique IDs)
+    thread_params_t *producer_params = malloc(sizeof(thread_params_t));
+    producer_params->upper_limit = upper_limit;
+    producer_params->num_consumers = num_consumers;
+    producer_params->consumer_id = -1;  // Not used for producers
+
+    thread_params_t *consumer_params = malloc(num_consumers * sizeof(thread_params_t));
+    for (int i = 0; i < num_consumers; i++) {
+        consumer_params[i].upper_limit = upper_limit;
+        consumer_params[i].num_consumers = num_consumers;
+        consumer_params[i].consumer_id = i + 1;  // Consumer IDs start from 1
+    }
 
     // Start timing
     struct timeval start_time, end_time;
     gettimeofday(&start_time, NULL);
 
     for (int i = 0; i < num_producers; i++) {
-        pthread_create(&producer_threads[i], NULL, producer, &thread_params);
+        pthread_create(&producer_threads[i], NULL, producer, producer_params);
     }
 
     for (int i = 0; i < num_consumers; i++) {
-        pthread_create(&consumer_threads[i], NULL, consumer, &thread_params);
+        pthread_create(&consumer_threads[i], NULL, consumer, &consumer_params[i]);
     }
 
     // 4. Wait for all threads to complete
@@ -73,6 +82,9 @@ int main(int argc, char *argv[]) {
     // 5. Clean up and exit
     destroy_buffer();
     destroy_sync();
+    
+    free(producer_params);
+    free(consumer_params);
 
     if (!disable_output) {
         printf("\nAll threads finished.\n");

@@ -15,6 +15,7 @@ extern int production_done; // Flag to signal that all production is complete
 typedef struct {
     int upper_limit;
     int num_consumers;
+    int consumer_id;  // For identifying which consumer prints what
 } thread_params_t;
 
 // Initializes synchronization primitives
